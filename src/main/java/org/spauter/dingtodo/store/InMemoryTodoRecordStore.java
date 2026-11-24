@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicLong;
 import org.spauter.dingtodo.enums.TodoRecordStatus;
 import org.spauter.dingtodo.model.TodoRecord;
 
@@ -15,12 +15,13 @@ import org.spauter.dingtodo.model.TodoRecord;
 public class InMemoryTodoRecordStore implements TodoRecordStore {
 
     private final List<TodoRecord> records = new ArrayList<>();
+    private final AtomicLong idSeq = new AtomicLong();
 
     @Override
     public synchronized TodoRecord save(TodoRecord record) {
         Instant now = Instant.now();
         if (record.getId() == null) {
-            record.setId(UUID.randomUUID().toString());
+            record.setId(idSeq.incrementAndGet());
         }
         if (record.getCreateTime() == null) {
             record.setCreateTime(now);

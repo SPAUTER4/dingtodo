@@ -1,0 +1,18 @@
+# MySQL 台账模式：--spring.profiles.active=mysql 启用
+spring:
+  # 清空默认的 JPA 自动配置排除，启用 DataSource/JPA
+  autoconfigure:
+    exclude: ${SPRING_AUTOCONFIGURE_EXCLUDE:}
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:dingtodo}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      # 开发期自动建表；生产建议改为 none 并执行 schema-mysql.sql
+      ddl-auto: update
+    open-in-view: false
+
+dingtodo:
+  record-store: mysql

@@ -59,7 +59,7 @@ class DingTodoServiceTest {
     void setUp() {
         DingTalkProperties dingProps = new DingTalkProperties("k", "s", "100",
                 "https://oapi.dingtalk.com", "https://api.dingtalk.com", 7000);
-        props = new DingTodoProperties(true, 3600);
+        props = new DingTodoProperties(true, "memory", 3600);
         store = new InMemoryTodoRecordStore();
         lenient().when(jsonHttp.newObject()).thenAnswer(inv -> JsonNodeFactory.instance.objectNode());
         service = new DingTodoService(dingProps, props, userClient, todoClient, notifyClient, store, jsonHttp);
@@ -135,7 +135,7 @@ class DingTodoServiceTest {
 
     @Test
     void withdrawByBizIdShouldFailWhenRecordDisabled() {
-        props = new DingTodoProperties(false, 3600);
+        props = new DingTodoProperties(false, "memory", 3600);
         DingTalkProperties dingProps = new DingTalkProperties("k", "s", "100",
                 "https://oapi.dingtalk.com", "https://api.dingtalk.com", 7000);
         service = new DingTodoService(dingProps, props, userClient, todoClient, notifyClient, store, jsonHttp);

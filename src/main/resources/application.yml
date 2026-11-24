@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: dingtodo
+  # 默认内存台账模式：不连数据库也能启动（台账仅存内存，重启丢失）
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
 
 dingding:
   # 凭证通过环境变量注入，禁止写死在仓库
@@ -17,4 +23,5 @@ dingding:
 
 dingtodo:
   record-enabled: true
+  record-store: memory       # memory | mysql（mysql 需激活 profile：--spring.profiles.active=mysql）
   union-id-cache-seconds: 3600

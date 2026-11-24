@@ -51,7 +51,7 @@
 | 框架 | Spring Boot 3.x |
 | 钉钉 API | 旧版 oapi + 新版 v1.0 REST，统一通过 OkHttp3 + Jackson 直调（未引入旧版 taobao 风格 SDK，全部接口可本地 Mock 测试） |
 | HTTP 客户端 | 统一使用 OkHttp3（原项目 OkHttp2/3 并存，已统一） |
-| 数据库 | MySQL（可选：台账与调用留痕表） |
+| 数据库 | MySQL（Spring Data JPA，台账持久化；默认内存模式可零配置启动） |
 
 ## 快速开始
 
@@ -78,10 +78,31 @@ dingtodo:
 
 ### 表结构
 
-台账与留痕沿用原项目设计，业务键字段通用化：
+台账表沿用原项目设计，业务键字段通用化（`vbillcode` → `biz_id`），建表脚本见 `src/main/resources/schema-mysql.sql`：
 
-- `ding_user_todo`：`(open_id, record_id, request_id, biz_id, status, task_id)`，其中 `vbillcode` 更名为通用 `biz_id`
-- `ding_todo_api`：钉钉 API 调用留痕
+- `ding_user_todo`：`(id, biz_id, user_id, task_id, request_id, msg_task_id, status, create_time, update_time)`，索引 `idx_biz_status` / `idx_task_id`
+- `ding_todo_api` 调用留痕表：待做
+
+### 台账存储模式
+
+`dingtodo.record-store` 支持两种模式：
+
+| 模式 | 启用方式 | 说明 |
+|---|---|---|
+| `memory`（默认） | `mvn spring-boot:run` 即可 | 零配置启动，台账存内存，重启丢失 |
+| `mysql` | `--spring.profiles.active=mysql` + 环境变量 | JPA 持久化到 MySQL，支持按业务键撤回跨重启生效 |
+
+MySQL 模式环境变量：
+
+```bash
+MYSQL_HOST=localhost     # 可省略，默认 localhost
+MYSQL_PORT=3306          # 可省略，默认 3306
+MYSQL_DB=dingtodo        # 可省略，默认 dingtodo
+MYSQL_USER=root
+MYSQL_PASSWORD=...
+```
+
+开发期默认 `ddl-auto=update` 自动建表；生产建议执行 `schema-mysql.sql` 并将 `spring.jpa.hibernate.ddl-auto` 改为 `none`。接入方也可注册自己的 `TodoRecordStore` bean 替换内置实现。
 
 ## 接口规划
 
@@ -142,7 +163,7 @@ dingtodo:
 - [x] 用户：userId → unionId、免登换 userId
 - [x] 台账（接口 + 内存默认实现，可注入自己的持久化实现替换）
 - [x] 单元测试（MockWebServer / Mockito，不依赖真实环境）
-- [ ] 台账 MySQL 持久化实现（ding_user_todo / ding_todo_api 表）
+- [x] 台账 MySQL 持久化实现（ding_user_todo 表，profile 切换 memory/mysql）
 - [ ] 调用留痕（对齐原 ding_todo_api 全量留痕）
 - [ ] 联调真实钉钉环境
 
