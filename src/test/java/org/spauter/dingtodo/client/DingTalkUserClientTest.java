@@ -47,7 +47,8 @@ class DingTalkUserClientTest {
         DingTalkTokenManager tokenManager = mock(DingTalkTokenManager.class);
         when(tokenManager.getToken()).thenReturn("tk");
         logStore = new RecordingStore();
-        client = new DingTalkUserClient(dingProps, new DingTodoProperties(true, "memory", 3600, 0, "0 30 3 * * ?"),
+        client = new DingTalkUserClient(dingProps,
+                new DingTodoProperties(true, "memory", 3600, 0, "0 30 3 * * ?", 5, 20000),
                 tokenManager, new JsonHttp(new OkHttpClient(), new ObjectMapper(), logStore));
     }
 

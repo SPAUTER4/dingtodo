@@ -36,3 +36,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### 本地联调凭证（严禁提交） ###
+application-local.yml

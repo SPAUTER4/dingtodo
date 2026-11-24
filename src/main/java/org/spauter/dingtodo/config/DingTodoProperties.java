@@ -21,5 +21,9 @@ public record DingTodoProperties(
          */
         @DefaultValue("0") int apiLogRetentionDays,
         /** 留痕清理任务执行时间（cron），默认每天 03:30 */
-        @DefaultValue("0 30 3 * * ?") String apiLogCleanupCron) {
+        @DefaultValue("0 30 3 * * ?") String apiLogCleanupCron,
+        /** 批量发待办/通知的并发线程数（钉钉接口有限流，建议 5-10，勿调大） */
+        @DefaultValue("5") int batchConcurrency,
+        /** 批量任务队列容量（有界，防止一次性提交撑爆内存） */
+        @DefaultValue("20000") int batchQueueCapacity) {
 }

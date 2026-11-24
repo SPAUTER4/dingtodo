@@ -84,6 +84,28 @@ dingtodo:
 - `ding_user_todo` 台账表：沿用原项目设计，业务键字段通用化（`vbillcode` → `biz_id`），含 `biz_id+status` / `task_id` 索引
 - `ding_todo_api` 调用留痕表：自动记录所有钉钉调用（url / 参数 / 响应 / 操作名 / 成败 / 耗时）。与原表的差异：不存明文 access_token（url 脱敏），新增 `method` / `success` / `err_msg` / `elapsed_ms`
 
+### 批量发待办/通知
+
+场景：如某月份 6000+ 项目的填报通知，逐个负责人推送。同步接口 `/todo/send` 适合单据审批（少量执行人）；批量场景用异步接口，避免调用方长时间阻塞：
+
+1. `POST /notify/batch/send`（或 `/todo/batch/send`）提交 `items` 列表 → 立即返回 `{batchId, total}`
+2. 后台有界线程池逐条执行（每条独立成功/失败，互不影响），**每条结果落台账**（持久），进度计数在内存
+3. `GET /todo/batch/{batchId}` 查询：`total / done / success / failed` + 失败明细（bizId: 原因），失败项可修数后重发
+
+与原项目 ct-zjjh 纯异步线程池的差异：**ct 侧拿不到推送结果；这里每条结果都落 `ding_user_todo` 台账**，调用方事后可对账，不需要阻塞等待。
+
+配置与注意事项：
+
+```yaml
+dingtodo:
+  batch-concurrency: 5        # 并发线程数；钉钉接口有限流且 token 全局共享，建议 5-10
+  batch-queue-capacity: 20000 # 有界队列；单次提交条数不得超过该值，超限请分批
+```
+
+- 队列满时由提交线程自己执行（CallerRuns，宁慢不丢）
+- **进度登记是内存态**：重启后 batchId 查询报「不存在」，且队列中未执行的任务丢失——但已执行的每条都在台账，对账以 `ding_user_todo` 为准。需要任务级持久化/断点续推时再引入任务表
+- 单条失败不中断整批；按 bizId 重发前建议先撤回（待办无唯一性约束，直接重发会产生重复待办）
+
 ### 台账存储模式
 
 `dingtodo.record-store` 支持两种模式：
@@ -121,11 +143,14 @@ dingtodo:
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/todo/send` | 发待办（业务键 + 标题 + 描述 + 跳转地址 + 执行人列表，可选附带工作通知） |
+| POST | `/todo/send` | 发待办（同步，适合单据审批等少量执行人场景） |
+| POST | `/todo/batch/send` | **批量**发待办：立即受理返回 batchId，后台线程池逐条异步执行 |
+| GET | `/todo/batch/{batchId}` | 查询批量进度：total/done/success/failed + 失败明细（bizId: 原因） |
 | POST | `/todo/withdraw/by-biz` | 按业务键撤回（撤该 bizId 全部已推送待办及配套通知） |
 | POST | `/todo/withdraw/by-task` | 按 taskId + userId 直接撤回 |
 | GET | `/todo/users/{userId}?fetchAll=` | 查询用户组织内全部待办（fetchAll 自动翻页聚合） |
 | POST | `/notify/send` | 发工作通知（action_card / text） |
+| POST | `/notify/batch/send` | **批量**发工作通知：立即受理返回 batchId，后台逐条异步执行 |
 | POST | `/notify/withdraw` | 按 msgTaskId 撤回工作通知 |
 | GET | `/auth/userid?code=` | 免登：钉钉 code 换 userId |
 | GET | `/auth/userid-by-mobile?mobile=` | 手机号查钉钉 userId |
@@ -179,6 +204,7 @@ dingtodo:
 - [x] 单元测试（MockWebServer / Mockito，不依赖真实环境）
 - [x] 台账 MySQL 持久化实现（ding_user_todo 表，profile 切换 memory/mysql）
 - [x] 调用留痕（JsonHttp 统一埋点落 ding_todo_api 表，token 脱敏，跟随 record-store 双模式）
+- [x] 批量异步发待办/通知（有界线程池 + batchId 进度查询 + 台账对账）
 - [ ] 联调真实钉钉环境
 
 ## 来源

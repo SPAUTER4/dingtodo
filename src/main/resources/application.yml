@@ -12,7 +12,8 @@ spring:
       - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
 
 dingding:
-  # 凭证通过环境变量注入，禁止写死在仓库
+  # 凭证通过环境变量注入，禁止写死在仓库（jzmobile-gateway 曾因此泄露过一套凭证）。
+  # 本地联调：把真实值放 application-local.yml（已在 .gitignore 中），启动加 --spring.profiles.active=local
   appkey: ${DINGTALK_APPKEY:}
   appsecret: ${DINGTALK_APPSECRET:}
   agent-id: ${DINGTALK_AGENT_ID:}
@@ -25,3 +26,6 @@ dingtodo:
   record-enabled: true
   record-store: memory       # memory | mysql（mysql 需激活 profile：--spring.profiles.active=mysql）
   union-id-cache-seconds: 3600
+  # 批量发待办/通知的线程池（钉钉接口有限流，并发建议 5-10，勿盲目调大）
+  batch-concurrency: 5
+  batch-queue-capacity: 20000
