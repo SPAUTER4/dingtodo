@@ -13,5 +13,13 @@ public record DingTodoProperties(
         /** 台账存储实现：memory（默认）/ mysql */
         @DefaultValue("memory") String recordStore,
         /** userId → unionId 映射缓存秒数 */
-        @DefaultValue("3600") long unionIdCacheSeconds) {
+        @DefaultValue("3600") long unionIdCacheSeconds,
+        /**
+         * 调用留痕保留天数，超过则定时清理。
+         * 0 表示不清理（默认，由接入方按审计要求决定是否开启）。
+         * 仅 mysql 模式生效；内存模式天然限量 500 条。
+         */
+        @DefaultValue("0") int apiLogRetentionDays,
+        /** 留痕清理任务执行时间（cron），默认每天 03:30 */
+        @DefaultValue("0 30 3 * * ?") String apiLogCleanupCron) {
 }

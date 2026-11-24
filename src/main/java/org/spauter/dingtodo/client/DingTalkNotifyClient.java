@@ -54,7 +54,8 @@ public class DingTalkNotifyClient {
                         + tokenManager.getToken(),
                 http.newObject()
                         .put("msg_task_id", msgTaskId)
-                        .put("agent_id", agentId()));
+                        .put("agent_id", agentId()),
+                "撤回工作通知");
     }
 
     private long asyncSend(List<String> userIds, ObjectNode msg) {
@@ -67,7 +68,8 @@ public class DingTalkNotifyClient {
                 http.newObject()
                         .put("agent_id", agentId())
                         .put("userid_list", String.join(",", userIds))
-                        .set("msg", msg));
+                        .set("msg", msg),
+                "发工作通知");
         return resp.path("task_id").asLong();
     }
 

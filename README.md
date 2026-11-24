@@ -39,7 +39,7 @@
 ### 基础能力
 
 - access_token 获取与**带过期时间的缓存**（原实现每次实时请求，无缓存）
-- 所有钉钉 API 调用**全量留痕**（url / 参数 / 结果），沿用原 `ding_todo_api` 表设计
+- 所有钉钉 API 调用**自动留痕**（在 JsonHttp 统一埋点，一次覆盖全部调用）：url / 参数 / 响应 / 操作名 / 成败 / 耗时。安全增强：URL 中 access_token 脱敏、不落明文 token、超长截断、留痕失败不影响业务调用
 - 统一返回体与异常处理
 
 ## 技术栈
@@ -78,10 +78,10 @@ dingtodo:
 
 ### 表结构
 
-台账表沿用原项目设计，业务键字段通用化（`vbillcode` → `biz_id`），建表脚本见 `src/main/resources/schema-mysql.sql`：
+建表脚本见 `src/main/resources/schema-mysql.sql`：
 
-- `ding_user_todo`：`(id, biz_id, user_id, task_id, request_id, msg_task_id, status, create_time, update_time)`，索引 `idx_biz_status` / `idx_task_id`
-- `ding_todo_api` 调用留痕表：待做
+- `ding_user_todo` 台账表：沿用原项目设计，业务键字段通用化（`vbillcode` → `biz_id`），含 `biz_id+status` / `task_id` 索引
+- `ding_todo_api` 调用留痕表：自动记录所有钉钉调用（url / 参数 / 响应 / 操作名 / 成败 / 耗时）。与原表的差异：不存明文 access_token（url 脱敏），新增 `method` / `success` / `err_msg` / `elapsed_ms`
 
 ### 台账存储模式
 
@@ -103,6 +103,18 @@ MYSQL_PASSWORD=...
 ```
 
 开发期默认 `ddl-auto=update` 自动建表；生产建议执行 `schema-mysql.sql` 并将 `spring.jpa.hibernate.ddl-auto` 改为 `none`。接入方也可注册自己的 `TodoRecordStore` bean 替换内置实现。
+
+### 留痕表增长治理
+
+`ding_todo_api` 随调用单调增长。留痕一条约 1–2KB，审批待办类业务一天数百到数千次调用，一年约 1–2GB，短期不清理也有余量；长期建议开启内置的定期清理（**默认关闭**，是否清理、保留多久属于审计/合规决策）：
+
+```yaml
+dingtodo:
+  api-log-retention-days: 90        # 保留 90 天，0 = 不清理（默认）
+  api-log-cleanup-cron: "0 30 3 * * ?"  # 可选，默认每天 03:30 执行
+```
+
+仅 mysql 模式生效（内存模式天然限量最近 500 条）。数据量特别大时可进一步改用 MySQL 按时间分区 + DROP PARTITION 清理，本项目暂未内置。
 
 ## 接口规划
 
@@ -164,7 +176,7 @@ MYSQL_PASSWORD=...
 - [x] 台账（接口 + 内存默认实现，可注入自己的持久化实现替换）
 - [x] 单元测试（MockWebServer / Mockito，不依赖真实环境）
 - [x] 台账 MySQL 持久化实现（ding_user_todo 表，profile 切换 memory/mysql）
-- [ ] 调用留痕（对齐原 ding_todo_api 全量留痕）
+- [x] 调用留痕（JsonHttp 统一埋点落 ding_todo_api 表，token 脱敏，跟随 record-store 双模式）
 - [ ] 联调真实钉钉环境
 
 ## 来源

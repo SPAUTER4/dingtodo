@@ -32,7 +32,7 @@ class DingTalkNotifyClientTest {
         DingTalkTokenManager tokenManager = mock(DingTalkTokenManager.class);
         when(tokenManager.getToken()).thenReturn("tk");
         client = new DingTalkNotifyClient(props, tokenManager,
-                new JsonHttp(new OkHttpClient(), new ObjectMapper()));
+                new JsonHttp(new OkHttpClient(), new ObjectMapper(), new org.spauter.dingtodo.store.InMemoryApiCallLogStore()));
     }
 
     @AfterEach

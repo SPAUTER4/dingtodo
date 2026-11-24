@@ -35,7 +35,7 @@ public class DingTalkTokenManager {
         String url = props.oapiBaseUrl() + "/gettoken"
                 + "?appkey=" + encode(props.appKey())
                 + "&appsecret=" + encode(props.appSecret());
-        JsonNode resp = http.getOapi(url);
+        JsonNode resp = http.getOapi(url, "获取access_token");
         cachedToken = resp.path("access_token").asText();
         long expiresIn = resp.path("expires_in").asLong(7200);
         // 取官方有效期与配置上限的较小值，并预留 60s 安全边界

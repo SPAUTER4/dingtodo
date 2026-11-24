@@ -37,7 +37,7 @@ class DingTalkTokenManagerTest {
     void getTokenShouldCacheWithinTtl() throws Exception {
         server.enqueue(new MockResponse().setBody(
                 "{\"errcode\":0,\"access_token\":\"tk1\",\"expires_in\":7200}"));
-        manager = new DingTalkTokenManager(props(7000), new JsonHttp(new OkHttpClient(), new ObjectMapper()));
+        manager = new DingTalkTokenManager(props(7000), new JsonHttp(new OkHttpClient(), new ObjectMapper(), new org.spauter.dingtodo.store.InMemoryApiCallLogStore()));
 
         assertEquals("tk1", manager.getToken());
         assertEquals("tk1", manager.getToken());
@@ -51,7 +51,7 @@ class DingTalkTokenManagerTest {
         server.enqueue(new MockResponse().setBody(
                 "{\"errcode\":0,\"access_token\":\"tk2\",\"expires_in\":7200}"));
         // 缓存秒数为 0 表示 TTL 立即过期，每次都重新获取
-        manager = new DingTalkTokenManager(props(0), new JsonHttp(new OkHttpClient(), new ObjectMapper()));
+        manager = new DingTalkTokenManager(props(0), new JsonHttp(new OkHttpClient(), new ObjectMapper(), new org.spauter.dingtodo.store.InMemoryApiCallLogStore()));
 
         assertEquals("tk1", manager.getToken());
         assertEquals("tk2", manager.getToken());

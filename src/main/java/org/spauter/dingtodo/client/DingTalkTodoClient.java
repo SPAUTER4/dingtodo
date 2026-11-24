@@ -34,7 +34,7 @@ public class DingTalkTodoClient {
     /** 创建待办，taskBody 由 DingTodoService 组装 */
     public CreateTaskResult createTask(String unionId, ObjectNode taskBody) {
         String url = props.apiBaseUrl() + "/v1.0/todo/users/" + encode(unionId) + "/tasks";
-        JsonNode resp = http.postApiV1(url, tokenManager.getToken(), taskBody);
+        JsonNode resp = http.postApiV1(url, tokenManager.getToken(), taskBody, "创建待办");
         return new CreateTaskResult(
                 resp.path("taskId").asText(),
                 resp.path("requestId").asText(null));
@@ -44,14 +44,14 @@ public class DingTalkTodoClient {
     public void deleteTask(String unionId, String taskId) {
         String url = props.apiBaseUrl() + "/v1.0/todo/users/" + encode(unionId)
                 + "/tasks/" + encode(taskId);
-        http.deleteApiV1(url, tokenManager.getToken());
+        http.deleteApiV1(url, tokenManager.getToken(), "删除待办");
     }
 
     /** 分页查询用户组织内全部待办 */
     public TodoPage queryOrgTasks(String unionId, String nextToken) {
         String url = props.apiBaseUrl() + "/v1.0/todo/users/" + encode(unionId) + "/org/tasks/query";
         ObjectNode body = http.newObject().put("nextToken", nextToken == null ? "" : nextToken);
-        JsonNode resp = http.postApiV1(url, tokenManager.getToken(), body);
+        JsonNode resp = http.postApiV1(url, tokenManager.getToken(), body, "查询组织待办");
 
         List<TodoTaskInfo> tasks = new ArrayList<>();
         for (JsonNode item : resp.path("todoList")) {

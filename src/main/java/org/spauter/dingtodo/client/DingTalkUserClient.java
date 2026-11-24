@@ -43,7 +43,8 @@ public class DingTalkUserClient {
                 dingProps.oapiBaseUrl() + "/topapi/v2/user/get?access_token=" + tokenManager.getToken(),
                 http.newObject()
                         .put("userid", userId)
-                        .put("language", "zh_CN"));
+                        .put("language", "zh_CN"),
+                "获取unionId");
         String unionId = resp.path("result").path("unionid").asText();
         if (!StringUtils.hasText(unionId)) {
             throw new ApiException("获取 unionId 失败: userid=" + userId);
@@ -60,7 +61,8 @@ public class DingTalkUserClient {
         }
         JsonNode resp = http.postOapi(
                 dingProps.oapiBaseUrl() + "/topapi/v2/user/getuserinfo?access_token=" + tokenManager.getToken(),
-                http.newObject().put("code", code));
+                http.newObject().put("code", code),
+                "免登换userId");
         String userId = resp.path("result").path("userid").asText();
         if (!StringUtils.hasText(userId)) {
             throw new ApiException("免登失败: 未取到 userid");
