@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dingtodo
+
+dingding:
+  # 凭证通过环境变量注入，禁止写死在仓库
+  appkey: ${DINGTALK_APPKEY:}
+  appsecret: ${DINGTALK_APPSECRET:}
+  agent-id: ${DINGTALK_AGENT_ID:}
+  # 以下一般无需修改（测试时可指向 MockWebServer）
+  oapi-base-url: https://oapi.dingtalk.com
+  api-base-url: https://api.dingtalk.com
+  token-cache-seconds: 7000
+
+dingtodo:
+  record-enabled: true
+  union-id-cache-seconds: 3600
