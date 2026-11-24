@@ -153,6 +153,11 @@ public class DingTodoService {
         return userClient.getUserIdByCode(code);
     }
 
+    /** 根据手机号查询钉钉 userId */
+    public String getUserIdByMobile(String mobile) {
+        return userClient.getUserIdByMobile(mobile);
+    }
+
     private ObjectNode buildTaskBody(TodoSendRequest req, String unionId, List<String> participantUnionIds) {
         ObjectNode body = http.newObject()
                 .put("subject", req.subject());

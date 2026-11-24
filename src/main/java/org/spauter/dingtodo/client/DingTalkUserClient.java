@@ -70,6 +70,25 @@ public class DingTalkUserClient {
         return userId;
     }
 
+    /**
+     * 根据手机号查询钉钉 userId（员工离职后该接口会返回 60121 未找到该用户）。
+     * 不做本地缓存：手机号与 userId 的对应关系会因换号/离职变化，实时查询保证准确。
+     */
+    public String getUserIdByMobile(String mobile) {
+        if (!StringUtils.hasText(mobile)) {
+            throw new ApiException("手机号不能为空");
+        }
+        JsonNode resp = http.postOapi(
+                dingProps.oapiBaseUrl() + "/topapi/v2/user/getbymobile?access_token=" + tokenManager.getToken(),
+                http.newObject().put("mobile", mobile),
+                "手机号查userId");
+        String userId = resp.path("result").path("userid").asText();
+        if (!StringUtils.hasText(userId)) {
+            throw new ApiException("根据手机号查询用户失败: mobile=" + mobile);
+        }
+        return userId;
+    }
+
     private record UnionIdEntry(String unionId, long expireAt) {
     }
 }

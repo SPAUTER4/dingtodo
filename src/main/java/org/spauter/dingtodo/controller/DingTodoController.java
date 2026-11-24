@@ -74,4 +74,10 @@ public class DingTodoController {
     public Result<String> userIdByCode(@RequestParam String code) {
         return Result.ok(service.getUserIdByCode(code));
     }
+
+    /** 根据手机号查询钉钉 userId（员工离职后返回 60121 未找到） */
+    @GetMapping("/auth/userid-by-mobile")
+    public Result<String> userIdByMobile(@RequestParam String mobile) {
+        return Result.ok(service.getUserIdByMobile(mobile));
+    }
 }

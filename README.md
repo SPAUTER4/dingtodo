@@ -34,6 +34,7 @@
 
 - **userId → unionId** 转换（调用钉钉 v2/user/get）
 - **免登**：钉钉授权 code 换 userId
+- **手机号查 userId**：调用钉钉 v2/user/getbymobile（员工离职后返回 60121 未找到；不做本地缓存，保证离职/换号后查询准确）
 - 业务侧用户体系（原 NC sourceId 之类）通过可插拔的 `UserIdResolver` 接口由接入方自己实现，插件不绑定任何具体业务系统
 
 ### 基础能力
@@ -127,6 +128,7 @@ dingtodo:
 | POST | `/notify/send` | 发工作通知（action_card / text） |
 | POST | `/notify/withdraw` | 按 msgTaskId 撤回工作通知 |
 | GET | `/auth/userid?code=` | 免登：钉钉 code 换 userId |
+| GET | `/auth/userid-by-mobile?mobile=` | 手机号查钉钉 userId |
 
 发待办请求示例：
 
