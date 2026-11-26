@@ -51,7 +51,7 @@
 | pcUrl | string | 否 | PC 端点击跳转地址 |
 | executorIds | string[] | 是 | 执行人（待办责任人）钉钉 userId 列表 |
 | participantIds | string[] | 否 | 参与人钉钉 userId 列表 |
-| sendNotify | boolean | 否 | `true` 时同时发一条工作通知提醒（需传 appUrl 作为跳转按钮） |
+| sendNotify | boolean | 否 | `true` 时同时发一条工作通知提醒（需传 appUrl 作为跳转按钮；注意钉钉限制：相同内容通知每人每天仅一条，见 2.1） |
 | notifyTitle | string | 否 | 通知标题，缺省用 subject |
 | notifyContent | string | 否 | 通知内容（markdown），缺省用 description |
 
@@ -275,6 +275,9 @@ curl -X POST http://127.0.0.1:8080/notify/send -H "Content-Type: application/jso
 { "code": 0, "message": "success", "data": 777882345 }
 ```
 
+> **钉钉侧限制（实测确认）：相同内容的通知对同一接收人一天只能发送一次，撤回也不影响去重。**
+> 批量提醒类通知（如多个项目用同一模板）务必在内容中带上业务标识（项目名/单据号等），否则第二次起会被钉钉去重，接收人收不到。
+
 ### 2.2 批量发工作通知（异步）
 
 `POST /notify/batch/send`
@@ -295,7 +298,9 @@ curl -X POST http://127.0.0.1:8080/notify/send -H "Content-Type: application/jso
 
 **响应：** `{ "code": 0, "message": "success", "data": null }`
 
-> 注意：通知撤回的 msgTaskId 与待办 taskId 是两套 id，不能混用。
+> 注意：
+> 1. 通知撤回的 msgTaskId 与待办 taskId 是两套 id，不能混用。
+> 2. **只能撤回 24 小时内发送的通知**，超时的撤回无效。需要长期保留提醒的场景建议用待办（待办可随时撤回）而不是工作通知。
 
 ---
 

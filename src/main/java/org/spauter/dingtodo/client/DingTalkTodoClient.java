@@ -36,7 +36,7 @@ public class DingTalkTodoClient {
         String url = props.apiBaseUrl() + "/v1.0/todo/users/" + encode(unionId) + "/tasks";
         JsonNode resp = http.postApiV1(url, tokenManager.getToken(), taskBody, "创建待办");
         return new CreateTaskResult(
-                resp.path("taskId").asText(),
+                resp.path("id").asText(),
                 resp.path("requestId").asText(null));
     }
 

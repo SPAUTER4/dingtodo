@@ -46,12 +46,14 @@ class DingTalkTodoClientTest {
 
     @Test
     void createTaskShouldPostV1RestWithTokenHeader() throws Exception {
-        server.enqueue(new MockResponse().setBody("{\"taskId\":123,\"requestId\":\"req-1\"}"));
+        // 创建待办响应的主键字段是 id（非 taskId），requestId 伴随返回
+        server.enqueue(new MockResponse().setBody(
+                "{\"id\":\"taskfff2f7db2497501cca6dd20519299d26\",\"requestId\":\"req-1\"}"));
 
         CreateTaskResult result = client.createTask("union-1",
                 new ObjectMapper().createObjectNode().put("subject", "审批"));
 
-        assertEquals("123", result.taskId());
+        assertEquals("taskfff2f7db2497501cca6dd20519299d26", result.taskId());
         assertEquals("req-1", result.requestId());
         RecordedRequest recorded = server.takeRequest();
         assertEquals("/v1.0/todo/users/union-1/tasks", recorded.getPath());

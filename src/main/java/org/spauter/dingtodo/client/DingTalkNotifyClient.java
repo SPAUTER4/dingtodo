@@ -12,6 +12,13 @@ import org.springframework.util.StringUtils;
  * 工作通知（企业会话消息）：发（asyncsend_v2）/ 撤（recall）。
  *
  * <p>接收人直接传钉钉 userId 列表（asyncsend_v2 语义），不做 unionId 转换。
+ *
+ * <p>钉钉侧限制（实测确认）：
+ * <ul>
+ *   <li>相同内容的通知对同一接收人一天只能发送一次，撤回也不影响去重——批量提醒类通知
+ *       应在内容中带上业务标识（如项目/单据号）避免被去重</li>
+ *   <li>只能撤回 24 小时内发送的通知</li>
+ * </ul>
  */
 @Component
 public class DingTalkNotifyClient {
