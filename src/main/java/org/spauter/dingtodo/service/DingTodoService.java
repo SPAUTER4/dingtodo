@@ -121,7 +121,7 @@ public class DingTodoService {
     public List<TodoTaskInfo> listOrgTodos(String userId, boolean fetchAll) {
         String unionId = userClient.getUnionId(userId);
         List<TodoTaskInfo> all = new ArrayList<>();
-        String nextToken = null;
+        String nextToken = "0";
         do {
             TodoPage page = todoClient.queryOrgTasks(unionId, nextToken);
             all.addAll(page.tasks());

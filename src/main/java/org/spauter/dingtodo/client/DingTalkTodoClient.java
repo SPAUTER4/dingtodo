@@ -53,17 +53,37 @@ public class DingTalkTodoClient {
         ObjectNode body = http.newObject().put("nextToken", nextToken == null ? "" : nextToken);
         JsonNode resp = http.postApiV1(url, tokenManager.getToken(), body, "查询组织待办");
 
+        // 实际响应字段：todoCards（卡片数组，createdTime 毫秒时间戳）、nextToken（字符串数字，
+        // 表示已返回条数）、totalCount（总数）；无 hasMore 字段
         List<TodoTaskInfo> tasks = new ArrayList<>();
-        for (JsonNode item : resp.path("todoList")) {
+        for (JsonNode item : resp.path("todoCards")) {
             tasks.add(new TodoTaskInfo(
                     item.path("taskId").asText(),
                     item.path("subject").asText(),
-                    item.path("description").asText(null),
-                    item.hasNonNull("createTime") ? item.path("createTime").asLong() : null));
+                    item.path("originalSource").path("sourceTitle").asText(null),
+                    item.hasNonNull("createdTime") ? item.path("createdTime").asLong() : null));
         }
-        boolean hasMore = resp.path("hasMore").asBoolean(false);
         String pageToken = resp.hasNonNull("nextToken") ? resp.path("nextToken").asText() : null;
-        return new TodoPage(tasks, pageToken, hasMore);
+        return new TodoPage(tasks, pageToken, hasMore(tasks, pageToken, resp));
+    }
+
+    /**
+     * 分页终止判定（防死循环）：nextToken 非空且本页非空才继续；
+     * nextToken 是数字时与 totalCount 比较，达到总数即停止。
+     */
+    private boolean hasMore(List<TodoTaskInfo> tasks, String pageToken, JsonNode resp) {
+        if (pageToken == null || pageToken.isEmpty() || tasks.isEmpty()) {
+            return false;
+        }
+        long total = resp.path("totalCount").asLong(-1);
+        if (total >= 0) {
+            try {
+                return Long.parseLong(pageToken.trim()) < total;
+            } catch (NumberFormatException ignored) {
+                // 非数字游标，退化为「有 token 即继续」
+            }
+        }
+        return true;
     }
 
     private String encode(String value) {

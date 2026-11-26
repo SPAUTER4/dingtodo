@@ -1,6 +1,7 @@
 package org.spauter.dingtodo.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -71,18 +72,47 @@ class DingTalkTodoClientTest {
     }
 
     @Test
-    void queryOrgTasksShouldParsePage() throws Exception {
+    void queryOrgTasksShouldParseTodoCardsPage() throws Exception {
+        // 按真实响应结构 mock：todoCards / nextToken(字符串数字) / totalCount，无 hasMore 字段
         server.enqueue(new MockResponse().setBody(
-                "{\"todoList\":[{\"taskId\":\"1\",\"subject\":\"s1\"}],\"nextToken\":\"n2\",\"hasMore\":true}"));
+                "{\"todoCards\":[{\"taskId\":\"t1\",\"subject\":\"审批单\",\"createdTime\":1795672517000,"
+                        + "\"originalSource\":{\"sourceTitle\":\"\"}}],"
+                        + "\"nextToken\":\"15\",\"totalCount\":18}"));
 
         TodoPage page = client.queryOrgTasks("union-1", "");
 
         assertTrue(page.hasMore());
-        assertEquals("n2", page.nextToken());
+        assertEquals("15", page.nextToken());
         assertEquals(1, page.tasks().size());
-        assertEquals("1", page.tasks().get(0).taskId());
+        assertEquals("t1", page.tasks().get(0).taskId());
+        assertEquals("审批单", page.tasks().get(0).subject());
+        assertEquals(1795672517000L, page.tasks().get(0).createTime());
         RecordedRequest recorded = server.takeRequest();
         assertEquals("/v1.0/todo/users/union-1/org/tasks/query", recorded.getPath());
+    }
+
+    @Test
+    void queryOrgTasksShouldStopWhenNextTokenReachesTotalCount() {
+        // 下一页游标已达到总数：hasMore=false，避免翻页死循环
+        server.enqueue(new MockResponse().setBody(
+                "{\"todoCards\":[{\"taskId\":\"t1\",\"subject\":\"s\"}],\"nextToken\":\"18\",\"totalCount\":18}"));
+
+        TodoPage page = client.queryOrgTasks("union-1", "15");
+
+        assertFalse(page.hasMore());
+        assertEquals(1, page.tasks().size());
+    }
+
+    @Test
+    void queryOrgTasksShouldStopOnEmptyPage() {
+        // 空页兜底终止（防游标非数字等异常情形死循环）
+        server.enqueue(new MockResponse().setBody(
+                "{\"todoCards\":[],\"nextToken\":\"abc\",\"totalCount\":18}"));
+
+        TodoPage page = client.queryOrgTasks("union-1", "15");
+
+        assertFalse(page.hasMore());
+        assertTrue(page.tasks().isEmpty());
     }
 
     @Test

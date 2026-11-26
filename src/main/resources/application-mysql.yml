@@ -4,6 +4,7 @@ spring:
   autoconfigure:
     exclude: ${SPRING_AUTOCONFIGURE_EXCLUDE:}
   datasource:
+    # 凭证与主机禁止写死在仓库：真实值放 application-local.yml（gitignored），激活 local,mysql 双 profile
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:dingtodo}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:}
